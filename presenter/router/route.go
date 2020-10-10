@@ -2,7 +2,6 @@ package router
 
 import (
 	"doc-server/interactor"
-	"doc-server/presenter/handler"
 	serverMiddleware "doc-server/presenter/middleware"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -10,7 +9,6 @@ import (
 
 type Server struct {
 	Route *chi.Mux
-	Handler *handler.DocHandler
 }
 
 func NewRouter() *Server {
@@ -25,14 +23,19 @@ func (s *Server) Router(h *interactor.Handler, m serverMiddleware.ServerMiddlewa
 	s.Route.Use(m.CORS)
 	s.Route.Route("/api/v1", func(r chi.Router) {
 		r.Route("/docs", func(r chi.Router) {
-			r.Get("/", h.DocHandler.GetAllDocs)
+			r.Get("/", h.DocHandler.DocIndex)
 			r.Post("/", h.DocHandler.DocCreate)
-			r.Get("/{id}", h.DocHandler.GetShowDoc)
+			r.Get("/{id}", h.DocHandler.DocShow)
 		})
 		r.Route("/users", func(r chi.Router) {
+			r.Get("/", h.UserHandler.UserIndex)
 			r.Post("/create", h.UserHandler.UserCreate)
 			r.Post("/session", h.UserHandler.UserSession)
 			r.Get("/auth", h.UserHandler.VerifyAccess)
+			r.Route("/{user_id}/bundles", func(r chi.Router) {
+				r.Get("/", h.BundleHandler.BundleIndex)
+				r.Get("/{id}", h.BundleHandler.BundleShow)
+			})
 		})
 	})
 }

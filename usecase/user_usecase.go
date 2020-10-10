@@ -9,6 +9,7 @@ import (
 type (
 	userUsecase struct {
 		repository.UserRepository
+		repository.DocRepository
 	}
 	UserUseCase interface {
 		GetUsers(limit int, offset int) ([]*model.User, error)
@@ -18,8 +19,8 @@ type (
 	}
 )
 
-func NewUserUseCase(r repository.UserRepository) UserUseCase {
-	return &userUsecase{r}
+func NewUserUseCase(r repository.UserRepository, d repository.DocRepository) UserUseCase {
+	return &userUsecase{r, d}
 }
 
 func (u userUsecase) GetUsers(limit int, offset int) ([]*model.User, error) {
@@ -28,11 +29,23 @@ func (u userUsecase) GetUsers(limit int, offset int) ([]*model.User, error) {
 }
 
 func (u userUsecase) GetUserByEmail(email string) (*model.User, error) {
-	return u.UserRepository.FetchByEmail(email)
+	user, err := u.UserRepository.FetchByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+	docs, err := u.DocRepository.FetchByUserID(user.ID)
+	user.Docs = docs
+	return user, err
 }
 
 func (u userUsecase) GetUserByID(id int64) (*model.User, error) {
-	return u.UserRepository.FetchByID(id)
+	user, err := u.UserRepository.FetchByID(id)
+	if err != nil {
+		return nil, err
+	}
+	docs, err := u.DocRepository.FetchByUserID(user.ID)
+	user.Docs = docs
+	return user, err
 }
 
 func (u userUsecase) CreateUser(user *model.User) (*model.User, error) {

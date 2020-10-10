@@ -17,8 +17,8 @@ type docHandler struct {
 }
 
 type DocHandler interface {
-	GetAllDocs(w http.ResponseWriter, r *http.Request)
-	GetShowDoc(w http.ResponseWriter, r *http.Request)
+	DocIndex(w http.ResponseWriter, r *http.Request)
+	DocShow(w http.ResponseWriter, r *http.Request)
 	DocCreate(w http.ResponseWriter, r *http.Request)
 }
 
@@ -26,10 +26,10 @@ func NewDocHandler(u usecase.DocUseCase) DocHandler {
 	return &docHandler{u}
 }
 
-func (d *docHandler) GetAllDocs(w http.ResponseWriter, r *http.Request) {
-	limit := chi.URLParam(r, "limit")
-	offset := chi.URLParam(r, "offset")
-	docs, err := d.DocUseCase.GetDocs(cast.ToInt(limit), cast.ToInt(offset))
+func (d *docHandler) DocIndex(w http.ResponseWriter, r *http.Request) {
+	lim := cast.ToInt(r.FormValue("limit"))
+	offs := cast.ToInt(r.FormValue("offset"))
+	docs, err := d.DocUseCase.GetDocs(lim, offs)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,7 +44,7 @@ func (d *docHandler) GetAllDocs(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (d *docHandler) GetShowDoc(w http.ResponseWriter, r *http.Request) {
+func (d *docHandler) DocShow(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	doc, err := d.DocUseCase.GetDoc(cast.ToInt64(id))
 	if err != nil {

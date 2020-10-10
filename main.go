@@ -25,7 +25,7 @@ func main() {
 	fmt.Println(initMessage)
 	i := interactor.NewInteractor(conn)
 	r := i.NewRepository()
-	u := i.NewUsecase(r)
+	u := i.NewUseCase(r)
 	// NewHandlerにNewRepositoryを渡す
 	h := i.NewHandler(u)
 	middleware := serverMiddleware.NewServerMiddleware()

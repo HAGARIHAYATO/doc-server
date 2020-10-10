@@ -13,7 +13,7 @@ type (
 	}
 	Interactor interface {
 		NewRepository() *Repository
-		NewUsecase(r *Repository) *UseCase
+		NewUseCase(r *Repository) *UseCase
 		NewHandler(u *UseCase) *Handler
 	}
 )
@@ -42,10 +42,10 @@ type UseCase struct {
 	usecase.BundleUseCase
 }
 
-func (i *interactor) NewUsecase(r *Repository) *UseCase {
+func (i *interactor) NewUseCase(r *Repository) *UseCase {
 	u := &UseCase{}
 	u.DocUseCase = usecase.NewDocUseCase(r.DocRepository)
-	u.UserUseCase = usecase.NewUserUseCase(r.UserRepository)
+	u.UserUseCase = usecase.NewUserUseCase(r.UserRepository, r.DocRepository)
 	u.BundleUseCase = usecase.NewBundleUseCase(r.BundleRepository)
 	return u
 }
@@ -60,6 +60,6 @@ func (i *interactor) NewHandler(u *UseCase) *Handler {
 	h := &Handler{}
 	h.DocHandler = handler.NewDocHandler(u.DocUseCase)
 	h.UserHandler = handler.NewUserHandler(u.UserUseCase)
-	h.BundleHandler = handler.NewBundleHandler(u.BundleUseCase)
+	h.BundleHandler = handler.NewBundleHandler(u.BundleUseCase, u.UserUseCase)
 	return h
 }

@@ -18,6 +18,7 @@ type DocOption struct {
 type DocRepository interface {
 	Fetch(options *DocOption) ([]*model.Doc, error)
 	FetchByID(id int64) (*model.Doc, error)
+	FetchByUserID(userId int64) ([]*model.Doc, error)
 	Create(doc *model.Doc) (*model.Doc, error)
 }
 
@@ -28,6 +29,21 @@ func NewDocRepository(Conn *sql.DB) DocRepository {
 func (r *docRepository) Fetch(options *DocOption) ([]*model.Doc, error) {
 	var docs []*model.Doc
 	rows, err := r.conn.Query("SELECT id, title, text, user_id FROM docs;")
+	if rows == nil { return nil, err }
+	for rows.Next() {
+		doc := &model.Doc{}
+		err = rows.Scan(&doc.ID, &doc.Title, &doc.Text, &doc.UserID)
+		if err == nil {
+			docs = append(docs, doc)
+		}
+	}
+	return docs, err
+}
+
+func (r *docRepository) FetchByUserID(userId int64) ([]*model.Doc, error) {
+	var docs []*model.Doc
+	rows, err := r.conn.Query("SELECT id, title, text, user_id FROM docs WHERE user_id=$1;", userId)
+	if rows == nil { return nil, err }
 	for rows.Next() {
 		doc := &model.Doc{}
 		err = rows.Scan(&doc.ID, &doc.Title, &doc.Text, &doc.UserID)

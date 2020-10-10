@@ -4,6 +4,8 @@ import (
 	"doc-server/domain/model"
 	"doc-server/usecase"
 	"encoding/json"
+	"fmt"
+	"github.com/spf13/cast"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
@@ -18,6 +20,7 @@ type(
 		UserCreate(w http.ResponseWriter, r *http.Request)
 		UserSession(w http.ResponseWriter, r *http.Request)
 		VerifyAccess(w http.ResponseWriter, r *http.Request)
+		UserIndex(w http.ResponseWriter, r *http.Request)
 	}
     JWTResponse struct {
     	ID int64
@@ -69,9 +72,9 @@ func (h *userHandler) UserCreate(w http.ResponseWriter, r *http.Request) {
 
 // sessionはフォームでｎはなくjsonで送る
 func (h *userHandler) UserSession(w http.ResponseWriter, r *http.Request) {
-	len := r.ContentLength
-	body := make([]byte, len)
-	r.Body.Read(body)
+	length := r.ContentLength
+	body := make([]byte, length)
+	_, _ = r.Body.Read(body)
 	var req SessionRequest
 	err := json.Unmarshal(body, &req)
 	if err != nil {
@@ -79,6 +82,10 @@ func (h *userHandler) UserSession(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := h.UserUseCase.GetUserByEmail(req.Email)
+
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	hashedPassword := user.Password
 
@@ -136,4 +143,23 @@ func (h *userHandler) VerifyAccess(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 }
+
+func (h *userHandler) UserIndex(w http.ResponseWriter, r *http.Request) {
+	lim := cast.ToInt(r.FormValue("limit"))
+	offs := cast.ToInt(r.FormValue("offset"))
+	users, err := h.UserUseCase.GetUsers(lim, offs)
+
+	res, err := json.Marshal(users)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_ ,err = w.Write(res)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+
 
